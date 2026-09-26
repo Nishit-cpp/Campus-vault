@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campus Vault</title>
+    <!-- v=7 bypasses aggressive browser caching -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=7">
+</head>
+<body>
+
+<div id="onboarding" class="onboarding">
+    <div class="onboard-box">
+        <div class="vault-logo">CV</div>
+        <div class="step" id="stepText">STEP 1 OF 3</div>
+        <h1 id="question">Configure Workspace</h1>
+        <p id="questionText">Set up your local vault environment.</p>
+        <div id="formArea"></div>
+        <button class="main-btn" onclick="nextStep()">Continue →</button>
+    </div>
+</div>
+
+<div id="app" class="hidden">
+<header>
+    <div class="logo">Campus_Vault</div>
+    <nav>
+        <a href="#journey">Overview</a>
+        <a href="#resources">Repository</a>
+        <a href="#practice">Practice</a>
+        <button class="icon-btn" onclick="toggleTheme()" id="themeToggle" title="Toggle Dark Mode">🌙</button>
+        <button onclick="openUpload()">Upload</button>
+        <button class="profile-btn" onclick="showProfile()">Profile</button>
+    </nav>
+</header>
+
+<main>
+    <section class="hero" id="home">
+        <div class="hero-content">
+            <div class="welcome">SYSTEM ACTIVE</div>
+            <h1>Welcome, <span id="studentName">Student</span>.</h1>
+            <p>Your centralized academic tracking and resource repository.</p>
+            <div class="big-search">
+                <input id="search" placeholder="Search repository (e.g. Python, C++, MOAM)..." oninput="loadResources()">
+            </div>
+        </div>
+    </section>
+
+    <section class="stats">
+        <div class="stat-box"><small>Total Resources</small><b id="total">0</b></div>
+        <div class="stat-box"><small>Total XP</small><b id="xp">0</b></div>
+        <div class="stat-box"><small>Active Streak</small><b id="streak">0</b></div>
+    </section>
+
+    <section class="journey" id="journey">
+        <div class="section-title"><h2>Roadmap</h2></div>
+        <div class="journey-grid">
+            <div class="journey-card main-journey">
+                <small>CURRENT DIRECTIVE</small>
+                <h3 id="goalTitle">Your Goal</h3>
+                <p id="goalText">Loading parameters...</p>
+                <div class="progress"><div id="journeyProgress"></div></div>
+            </div>
+            <div class="journey-card">
+                <small>PRIMARY FOCUS</small>
+                <h3 id="weakArea">—</h3>
+            </div>
+            <div class="journey-card">
+                <small>DAILY TARGET</small>
+                <h3 id="studyHours">—</h3>
+            </div>
+        </div>
+    </section>
+
+    <section class="resources">
+        <div class="section-title"><h2>Actions</h2></div>
+        <div class="grid">
+            <div class="card clickable" onclick="openStudyModal()">
+                <div class="card-top"><span class="mono-tag">Execute</span></div>
+                <h3>Log Session</h3>
+                <p>Record study hours and notes.</p>
+            </div>
+            <div class="card clickable" onclick="scrollToSection('practice')">
+                <div class="card-top"><span class="mono-tag">Train</span></div>
+                <h3>Practice</h3>
+                <p>Take tests and earn XP.</p>
+            </div>
+            <div class="card clickable" onclick="openUpload()">
+                <div class="card-top"><span class="mono-tag">Push</span></div>
+                <h3>Share Resource</h3>
+                <p>Commit notes to the vault.</p>
+            </div>
+            <div class="card clickable" onclick="scrollToSection('leaderboard')">
+                <div class="card-top"><span class="mono-tag">Rank</span></div>
+                <h3>Leaderboard</h3>
+                <p>View top performers.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="resources" id="resources">
+        <div class="section-title"><h2>Repository Explorer</h2></div>
+        <div class="filters">
+            <select id="branchFilter" onchange="updateDynamicSubjects(); loadResources()">
+                <option value="">All Branches</option>
+                <option value="CSE">CSE</option>
+                <option value="ECE">ECE</option>
+                <option value="MECH">Mechanical</option>
+                <option value="CIVIL">Civil</option>
+                <option value="EEE">EEE</option>
+            </select>
+            <select id="subject" onchange="loadResources()">
+                <option value="">All Subjects</option>
+            </select>
+            <select id="semester" onchange="loadResources()">
+                <option value="">All Semesters</option>
+                <option>Semester 1</option><option>Semester 2</option><option>Semester 3</option><option>Semester 4</option>
+            </select>
+            <select id="kind" onchange="loadResources()">
+                <option value="">All Types</option>
+                <option>Notes</option><option>PYQ</option><option>Lab</option><option>Practice</option><option>Reference</option>
+            </select>
+            <button class="outline-btn" onclick="clearFilters()">Reset Filters</button>
+        </div>
+        <div id="resourceGrid" class="grid"></div>
+    </section>
+
+    <section class="resources" id="practice">
+        <div class="section-title"><h2>Practice Arena</h2></div>
+        <div class="grid" id="testGrid"></div>
+        <div style="margin-top:25px;"><button class="main-btn" onclick="openTestModal()" style="width:auto; padding: 10px 20px;">+ Create Test</button></div>
+    </section>
+
+    <section class="resources" id="leaderboard">
+        <div class="section-title"><h2>Leaderboard</h2></div>
+        <div class="card"><div id="leaderboardList"></div></div>
+    </section>
+
+    <section class="resources" id="achievements">
+        <div class="section-title"><h2>Achievements</h2></div>
+        <div id="achievementGrid" class="grid"></div>
+    </section>
+</main>
+
+<!-- Modals -->
+<div id="studyModal" class="modal">
+    <div class="modal-box">
+        <button class="close" onclick="closeStudyModal()">×</button>
+        <h2>Log Study Session</h2>
+        <form id="studyForm" style="margin-top:20px;">
+            <input id="studySubject" placeholder="Subject (e.g. Python, EEE Lab)" required>
+            <input id="studyMinutes" type="number" min="1" placeholder="Minutes" required>
+            <textarea id="studyNote" placeholder="Session notes..."></textarea>
+            <button class="main-btn" type="submit">Commit Session</button>
+        </form>
+    </div>
+</div>
+
+<div id="uploadModal" class="modal">
+    <div class="modal-box">
+        <button class="close" onclick="closeUpload()">×</button>
+        <h2>Upload Resource</h2>
+        <form id="uploadForm" style="margin-top:20px;">
+            <input name="title" placeholder="Resource name" required>
+            <div class="two">
+                <select name="branch" required>
+                    <option value="">Branch</option>
+                    <option value="CSE">CSE</option><option value="ECE">ECE</option>
+                </select>
+                <input name="subject" placeholder="Subject" required>
+            </div>
+            <div class="two">
+                <select name="semester" required>
+                    <option value="">Semester</option><option>Semester 1</option><option>Semester 2</option>
+                </select>
+                <select name="kind" required>
+                    <option value="">Type</option><option>Notes</option><option>PYQ</option><option>Lab</option><option>Practice</option><option>Reference</option>
+                </select>
+            </div>
+            <textarea name="description" placeholder="Description"></textarea>
+            <label class="upload-file">
+                <strong>Select File</strong>
+                <input type="file" name="file" onchange="showFileName(this)" required>
+                <small id="fileName">No file selected</small>
+            </label>
+            <button class="main-btn" type="submit">Upload</button>
+        </form>
+    </div>
+</div>
+
+<div id="testModal" class="modal">
+    <div class="modal-box" style="max-width: 600px; max-height: 80vh; overflow-y: auto;">
+        <button class="close" onclick="closeTestModal()">×</button>
+        <h2>Create Test</h2>
+        <input id="testTitle" placeholder="Test title (e.g. C++ Basics)" style="margin-top:20px;">
+        <input id="testSubject" placeholder="Subject">
+        <div id="questionBuilder" style="margin-top:15px;"></div>
+        <button class="outline-btn" onclick="addQuestion()" style="margin-top:15px; width: 100%;">+ Add Question</button>
+        <button class="main-btn" onclick="createTest()" style="margin-top:15px;">Publish Test 🚀</button>
+    </div>
+</div>
+
+<div id="takeTestModal" class="modal">
+    <div class="modal-box" style="max-width: 600px; max-height: 80vh; overflow-y: auto;">
+        <button class="close" onclick="closeTakeTest()">×</button>
+        <h2 id="takeTestTitle" style="margin-bottom: 20px;">Test</h2>
+        <form id="takeTestForm"></form>
+    </div>
+</div>
+
+<div id="profileModal" class="modal">
+    <div class="modal-box">
+        <button class="close" onclick="closeProfile()">×</button>
+        <h2>User Profile</h2>
+        <div id="profileInfo" style="margin-top:20px;"></div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='app.js') }}?v=7"></script>
+</body>
+</html>
